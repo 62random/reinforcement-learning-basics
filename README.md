@@ -3,6 +3,7 @@
 TLDR:
 * Basic demonstration an comparison of Q-Learning and SARSA
 * Small repo I intend to use as a basic cheat-sheet for OpenAI Gym projects (or even any similar Reinforcement Learning problem)
+* You can follow the process I used in [main.ipynb](https://github.com/62random/reinforcement-learning-basics/blob/master/main.ipynb).
 
 
 ---
