@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageColor
 from IPython.display import display
 
 class GridWorld:
-    def __init__(self, rows, cols, win, lose_states, obstacles, start):
+    def __init__(self, rows, cols, win, lose_states, obstacles, start, max_steps):
         # Variáveis Globais 
         self.BOARD_ROWS = rows
         self.BOARD_COLS = cols
@@ -11,13 +11,14 @@ class GridWorld:
         self.OBSTACLES = obstacles
         self.START = start
         self.action_space = ['up', 'down', 'left', 'right']
+        self.max_steps = max_steps
 
         self.state = self.START
         self.steps = 0
         self.rewards = {}
-        self.rewards[self.WIN_STATE] = 1        
+        self.rewards[self.WIN_STATE] = 10        
         for lose in self.LOSE_STATES:
-            self.rewards[lose] = -1
+            self.rewards[lose] = -10
         self.step_reward = 0
     
     def reward(self):
@@ -43,7 +44,7 @@ class GridWorld:
             new_pos[1] < 0 or \
             new_pos[1] > self.BOARD_COLS - 1:
             
-            self.step_reward = -0.1
+            #self.step_reward = -0.1
         
             return self.state
 
@@ -52,10 +53,12 @@ class GridWorld:
     def step(self, action):
         self.steps += 1
         self.state = self.nextPosition(action)
-
+        
         finished = False
 
-        if self.state == self.WIN_STATE  or self.state in self.LOSE_STATES:
+        if self.steps > self.max_steps or \
+            self.state == self.WIN_STATE  or \
+            self.state in self.LOSE_STATES:
             finished = True
 
         return self.state, self.reward(), finished, self.steps
@@ -65,16 +68,16 @@ class GridWorld:
         self.steps = 0
         self.step_reward = 0
 
-    def render(self):
+    def render(self, paths=None):
         width = 600
         cell_width = int(width/self.BOARD_COLS)
         cell_height = int(cell_width)
         height = cell_height * self.BOARD_ROWS
         
 
-        image = Image.new(mode='RGB', size=(width, height), color='white')
+        image = Image.new(mode='RGBA', size=(width, height), color='white')
 
-        draw = ImageDraw.Draw(image)
+        draw = ImageDraw.Draw(image, 'RGBA')
         for i in range(self.BOARD_COLS - 1):
             vertical_line = ((i*cell_width + cell_width, 0),(i*cell_width + cell_width, image.height))
             draw.line(vertical_line, fill='black')
@@ -95,6 +98,17 @@ class GridWorld:
         draw.rectangle(square(convert_pos(self.WIN_STATE)), fill='green')
 
         draw.rectangle(square(convert_pos(self.START)), fill='yellow')
+
+        colors = [(77,77,255), (255, 100, 71)]
+        if paths:
+            for j in range(len(paths)): 
+                for path in paths[j]:
+                    for i in range(len(path) - 1):
+                        pos1 = convert_pos(path[i]) 
+                        pos1 = (pos1[0] + cell_width//2 + j*5, pos1[1] + cell_height//2 + j*5)
+                        pos2 = convert_pos(path[i+1]) 
+                        pos2 = (pos2[0] + cell_width//2 + j*5, pos2[1] + cell_height//2 + j*5)
+                        draw.line([pos1, pos2], fill=colors[j%len(colors)], width =3)
         
         del draw
         return display(image)

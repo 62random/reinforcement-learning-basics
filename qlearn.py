@@ -19,17 +19,25 @@ class QLearn:
     # In that second (value) dictionary, for each key (action) we have a Q-value
     # So, for example, self.qtable[state][action] corresponds to Q(state, action)
 
-    def __init__(self, alpha, gamma, action_space, max_epsilon, min_epsilon):
+    def __init__(self, alpha, gamma, action_space, max_epsilon, min_epsilon, n_episodes):
         self.qtable = {}
         self.alpha = alpha 
         self.gamma = gamma 
         self.action_space = action_space # = ['up', 'down', 'left', 'right'] in GridWorld
         self.max_epsilon = max_epsilon
         self.min_epsilon = min_epsilon
+        self.epsilon = max_epsilon
+        self.episode = 0
+        self.n_episodes = n_episodes
 
     
 
     def action(self, state):
+        # Chance of taking random action
+        if random.uniform(0,1) < self.epsilon:
+            action = self.action_space[random.randint(0,3)]
+            return action
+
         # Get (or initialize) the Q-values for the state
         if state in self.qtable:
             qvalues = self.qtable[state]
@@ -66,6 +74,14 @@ class QLearn:
 
     def reset(self):
         self.qtable = {}
+        self.epsilon = self.max_epsilon
+        self.episode = 0
+
+    def update_epsilon(self):
+        self.epsilon = self.max_epsilon - (self.max_epsilon - self.min_epsilon) * (self.episode/self.n_episodes)
+        self.episode += 1
+    
+
 
 
 

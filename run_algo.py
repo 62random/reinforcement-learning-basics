@@ -13,10 +13,9 @@ class Runner:
         self.env.reset()
         self.model.reset()
 
-        # Exploration vs Exploitation
-        epsilon = self.model.max_epsilon
         # Data about the rounds
         steps_taken = []
+        paths = []
 
         # This data variable is a general purpose 'data collector'
         # in Grid World I use it to track which games finish in a winning state
@@ -24,29 +23,30 @@ class Runner:
         # So i decided to just give it the generic name 'data'
         # You might want to change it to better fit your purpose
         data = []
-
         # Make N_EPISODES rounds of the game
         for i in range(n_episodes): 
             finished = False
-            state = self.env.state
-            while not finished:
+            state = self.env.state            
+            path = [state]
+            while not finished:                
                 # Register old state, to later use to update q-values
                 old_state = state
-                # Predict an action with our model (or randomize one, to explore the environment)
-                if random.uniform(0,1) < epsilon:
-                    action = self.env.action_space[random.randint(0,3)]
-                else:
-                    action = self.model.action(self.env.state)
+                # Predict an action with our model 
+                action = self.model.action(self.env.state)
                 # Make th move in the environment
                 state, reward, finished, steps = self.env.step(action)
+                if i > n_episodes -5:
+                    path.append(state)
 
                 # Update Q-values
                 self.model.updateQValues(old_state, action, reward, state)
             # Update epsilon (so the exploitation grows)
-            # Using a linear function, but we can use whatever function we want
-            epsilon = self.model.min_epsilon + (self.model.max_epsilon - self.model.min_epsilon) * (i/n_episodes)
+            self.model.update_epsilon()
+            # Collect data
             steps_taken.append(steps)
             data.append(state == self.env.WIN_STATE) 
             self.env.reset()
+            if i > n_episodes - 5:
+                paths.append(path)
         
-        return steps_taken, data
+        return steps_taken, data, paths
